@@ -18,13 +18,11 @@ export default async function handler(req, res) {
 
     try {
         // --- 1. LAUNCH THE BROWSER ---
-const executablePath = await chrome.executablePath || '/usr/bin/google-chrome';
-
+// --- 1. LAUNCH THE BROWSER ---
 browser = await core.launch({
-    args: [...chrome.args, '--disable-software-rasterizer', '--disable-dev-shm-usage'],
-    executablePath,
-    headless: true, // Always true on server
-    ignoreHTTPSErrors: true,
+    args: chrome.args,
+    executablePath: await chrome.executablePath,
+    headless: chrome.headless,
 });
 
 
