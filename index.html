@@ -5,47 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NCD Automation</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
-        h1 { color: #333; }
-        p { color: #666; }
-        .button { background-color: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
-        .button:hover { background-color: #0056b3; }
-        .file-upload { margin: 20px 0; }
-        .status { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: left; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); text-align: center; width: 90%; max-width: 450px; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        p { color: #555; font-size: 15px; line-height: 1.5; }
+        .button { background-color: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.3s; display: inline-block; margin-top: 15px; }
+        .button:hover { background-color: #2980b9; }
+        .button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        .file-upload { margin: 25px 0; border: 2px dashed #bdc3c7; padding: 20px; border-radius: 8px; }
+        input[type="file"] { font-size: 14px; }
+        .status { margin-top: 20px; background-color: #ecf0f1; padding: 15px; border-radius: 8px; text-align: left; font-size: 14px; min-height: 50px; line-height: 1.6; }
+        #log-area { white-space: pre-wrap; word-wrap: break-word; }
     </style>
+    <!-- PapaParse for reading CSV files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>NCD Screening Automation</h1>
-        <p>Step 1: Login to NCD portal manually. <br>Step 2: Upload patient list and start.</p>
+        <p><b>Step 1:</b> NCD पोर्टल पर मैन्युअल रूप से लॉग इन करें।<br><b>Step 2:</b> मरीज़ों की CSV लिस्ट अपलोड करें और ऑटोमेशन शुरू करें।</p>
             
         <div class="file-upload">
-            <label for="patient-list">Upload Patient List (CSV):</label>
             <input type="file" id="patient-list" accept=".csv">
         </div>
             
-        <button class="button" onclick="startAutomation()">Start Automation</button>
+        <button class="button" id="start-btn" onclick="startAutomation()">Start Automation</button>
             
-        <div class="status" id="status-area">
-            <strong>Status:</strong> Waiting...
+        <div class="status">
+            <strong>Status Log:</strong>
+            <div id="log-area">Waiting for instructions...</div>
         </div>
     </div>
 
     <script>
-        // This is a placeholder for the automation logic.
-        // We will build the real automation in the next steps.
-        function startAutomation() {
-            const statusArea = document.getElementById('status-area');
-            const fileInput = document.getElementById('patient-list');
-                
-            if (fileInput.files.length === 0) {
-                statusArea.innerHTML = '<strong>Status:</strong> Please upload a patient list first!';
+        const startBtn = document.getElementById('start-btn');
+        const logArea = document.getElementById('log-area');
+        const fileInput = document.getElementById('patient-list');
+        let patientData = [];
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            logArea.textContent = `File "${file.name}" selected. Ready to start.`;
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    patientData = results.data.filter(p => p.Name && p.Age); // Assumes CSV has "Name" and "Age" columns
+                    logArea.textContent = `${patientData.length} patients loaded from the list.`;
+                }
+            });
+        });
+
+        async function startAutomation() {
+            if (patientData.length === 0) {
+                logArea.textContent = 'Error: Please upload a valid CSV file with "Name" and "Age" columns first.';
                 return;
             }
+
+            startBtn.disabled = true;
+            startBtn.textContent = 'Processing...';
+            logArea.innerHTML = '';
+
+            for (let i = 0; i < patientData.length; i++) {
+                const patient = patientData[i];
+                logArea.innerHTML += `\n[${i+1}/${patientData.length}] Processing: ${patient.Name} (Age: ${patient.Age})...`;
+
+                try {
+                    const response = await fetch('/api/automate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            patientName: patient.Name,
+                            patientAge: patient.Age
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        logArea.innerHTML += `\n  -> Success: ${result.message}`;
+                    } else {
+                        logArea.innerHTML += `\n  -> Error: ${result.message}`;
+                    }
+
+                } catch (error) {
+                    logArea.innerHTML += `\n  -> Critical Error: Could not connect to the backend.`;
+                }
+            }
                 
-            statusArea.innerHTML = '<strong>Status:</strong> Automation started... (This is a demo)';
-            alert("This is a demo. The real automation logic will be added next.");
+            logArea.innerHTML += '\n\nAutomation complete!';
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Automation';
         }
     </script>
 </body>
