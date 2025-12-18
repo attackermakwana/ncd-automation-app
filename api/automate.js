@@ -18,11 +18,15 @@ export default async function handler(req, res) {
 
     try {
         // --- 1. LAUNCH THE BROWSER ---
-        browser = await core.launch({
-            args: chrome.args,
-            executablePath: await chrome.executablePath,
-            headless: chrome.headless, // Run headless on Vercel
-        });
+const executablePath = await chrome.executablePath || '/usr/bin/google-chrome';
+
+browser = await core.launch({
+    args: [...chrome.args, '--disable-software-rasterizer', '--disable-dev-shm-usage'],
+    executablePath,
+    headless: true, // Always true on server
+    ignoreHTTPSErrors: true,
+});
+
 
         const page = await browser.newPage();
             
