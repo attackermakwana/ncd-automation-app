@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCD Automation</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        h1 { color: #333; }
+        p { color: #666; }
+        .button { background-color: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        .button:hover { background-color: #0056b3; }
+        .file-upload { margin: 20px 0; }
+        .status { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NCD Screening Automation</h1>
+        <p>Step 1: Login to NCD portal manually. <br>Step 2: Upload patient list and start.</p>
+            
+        <div class="file-upload">
+            <label for="patient-list">Upload Patient List (CSV):</label>
+            <input type="file" id="patient-list" accept=".csv">
+        </div>
+            
+        <button class="button" onclick="startAutomation()">Start Automation</button>
+            
+        <div class="status" id="status-area">
+            <strong>Status:</strong> Waiting...
+        </div>
+    </div>
+
+    <script>
+        // This is a placeholder for the automation logic.
+        // We will build the real automation in the next steps.
+        function startAutomation() {
+            const statusArea = document.getElementById('status-area');
+            const fileInput = document.getElementById('patient-list');
+                
+            if (fileInput.files.length === 0) {
+                statusArea.innerHTML = '<strong>Status:</strong> Please upload a patient list first!';
+                return;
+            }
+                
+            statusArea.innerHTML = '<strong>Status:</strong> Automation started... (This is a demo)';
+            alert("This is a demo. The real automation logic will be added next.");
+        }
+    </script>
+</body>
+</html>
